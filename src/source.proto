@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package grpc;
+
+
+message Relogio {
+    string nome     =1;
+    double time     =2;
+}
+
+message Carta {
+    string nome     = 1;
+    string mensagem = 2;
+}
+
+message Nada {}
+
+service chat {
+    rpc receberCarta (Nada) returns (stream Carta);
+    rpc remeterCarta (Carta) returns (Nada);
+    rpc remeterRelogio (Relogio) returns (Nada);
+}
