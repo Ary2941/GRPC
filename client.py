@@ -20,38 +20,48 @@ class Client:
     def conectar(self,port):
         while not self.conectado:
             try:
+                print("connbecting...")
                 channel = grpc.insecure_channel('localhost:' + str(port))
-                self.conn = rpc.chatStub(channel)
-                self.conectado = True
+                self.stub = rpc.chatStub(channel)
+                try:
+                    self.stub.remeterCarta(chat.Carta(nome=self.username,mensagem="hello!"))
+                    self.conectado = True
+                except:
+                    raise grpc.RpcError
 
             except grpc.RpcError as e:
                 print("Erro ao acessar servidor:", e)
                 self.conectado = False
 
     def mandar_carta(self, message):
-        if message != '' and self.conectado:
-            lettre = chat.Carta()
-            lettre.nome = self.username
-            lettre.mensagem = message
-            self.conn.remeterCarta(lettre)
+        if message != '':
+            lettre = chat.Carta(nome=self.username,mensagem=message)
+            self.stub.remeterCarta(lettre)
+
 
     def mandar_relogio(self, tempo):
         if tempo != 0 and self.conectado:
             clock = chat.Relogio()
             clock.nome = self.username
             clock.time = tempo
-            self.conn.remeterRelogio(clock)
+            self.stub.remeterRelogio(clock)
 
+    def receber_carta(self):
+        for response in self.stub.receberCarta(chat.Nada()):
+            print(f"carta: {response.nome} {response.mensagem}")
+    
     def mandando_cartas(self):
         while 1:
             if self.conectado:
                 message = input("")
                 self.mandar_carta(message)
-                now = time.time()-start
-                self.mandar_relogio(now)
 
 
     def run_client(self):
+        self.mandar_relogio(start)
+        self.receber_carta()
+
         threading.Thread(target=self.mandando_cartas).start()
+
 
 Client(input("mandar mensagem para: "),input("meu port: ")).run_client()

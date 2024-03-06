@@ -9,17 +9,16 @@ import threading
 from concurrent import futures
 import time
 
-channel = grpc.insecure_channel('localhost:2491')
-
-stub = rpc.chatStub(channel)
+start = time.time()
 
 class services(rpc.chatServicer):
     def __init__(self):
-        ultima_carta = None
+        self.mensagens = [chat.Carta(nome="server",mensagem="mensagem 1"),chat.Carta(nome="server",mensagem="mensagem 2")]
         pass
 
     def receberCarta(self, request, context):
-        print("receberCarta",self.ultima_carta)
+        for mensagem in self.mensagens:
+            yield mensagem 
 
     def remeterCarta(self, request: chat.Carta, context):
         print(f"{request.nome}:{request.mensagem}")
@@ -27,10 +26,9 @@ class services(rpc.chatServicer):
         return chat.Nada()
     
     def remeterRelogio(self, request: chat.Relogio, context):
-        print(f"!{request.time}")
+        print(f"clock from {request.nome}: {request.time}")
 
         return chat.Nada()
-
 
 def run_server(port):
 
@@ -40,7 +38,7 @@ def run_server(port):
     try:
         server.add_insecure_port('[::]:' + str(port))
         print(f'Starting server. Listening at {port}...')
-
+        
         server.start()
 
         server.wait_for_termination()
@@ -48,4 +46,4 @@ def run_server(port):
         # Ignorar exceções específicas que você quer evitar
         print("OPS:", e)
 
-run_server("2491")
+run_server("12")
